@@ -1,36 +1,27 @@
 import axios from "axios";
 import { FormEvent, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
-const Regiser = () => {
+const LoginForm = (props:{loginData:Function}) => {
   const [email, setEmail] = useState<string | null>();
   const [password, setpassword] = useState<string | null>();
-  const [loading, setLoading] = useState<boolean>(false);
-  const navigate = useNavigate();
   const formSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      setLoading(true);
-      const res = await axios.post("login/", {
+      const {data} = await axios.post("login/", {
         email: email,
         password: password,
-      },{withCredentials:true});
-      axios.defaults.headers.common["Authorization"] = `Bearer ${res.data.access_token}`
-      setLoading(false);
-      if (res.status===200) {
-        navigate("/");
-      } 
-    } catch (error) {
-      console.error(error);
-      setLoading(false);
-    }
+      });
+      console.log(data);
+      props.loginData(data)
+    } catch (error) {}
   };
   return (
     <section className="bg-gray-50 dark:bg-gray-900">
       <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
         <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
           <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
-          <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
+            <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
               Login an account
             </h1>
             <form
@@ -71,17 +62,16 @@ const Regiser = () => {
                 />
               </div>
               <div className="mb-3 text-primary-600 underline">
-                <Link to={'/forgot'}>Forgot Password?</Link>
+                <Link to={"/forgot"}>Forgot Password?</Link>
               </div>
               <button
                 type="submit"
-                disabled={loading}
                 className={`w-full text-white font-medium rounded-lg text-sm px-5 py-2.5 text-center 
-              bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300
-              dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 
-              ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                  bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300
+                  dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 
+                  `}
               >
-                {loading ? "Loading..." : "Login to account"}
+                Login to account
               </button>
 
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
@@ -101,4 +91,4 @@ const Regiser = () => {
   );
 };
 
-export default Regiser;
+export default LoginForm;

@@ -1,7 +1,7 @@
 import React from 'react'
 import {BrowserRouter, Route, Routes} from 'react-router-dom'
 import Regiser from './components/Regiser'
-import Login from './components/Login'
+import Login from './components/login/Login'
 import Navbar from './components/Navbar'
 import Home from './components/Home'
 import ForgotPassword from './components/ForgotPassword'
