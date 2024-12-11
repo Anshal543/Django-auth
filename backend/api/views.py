@@ -13,6 +13,7 @@ from .authentication import (
 from .authentication import JWTAuthentication
 from datetime import datetime, timezone, timedelta
 from django.core.mail import send_mail, EmailMessage
+import pyotp
 
 
 class RegisterAPIView(APIView):
@@ -37,23 +38,32 @@ class LoginAPIView(APIView):
             raise AuthenticationFailed("Invalid credentials")
         if not user.check_password(password):
             raise APIException("Incorrect password")
-        access_token = create_access_token(user.id)
-        refresh_token = create_refresh_token(user.id)
-        UserToken.objects.create(
-            user_id=user.id,
-            token=refresh_token,
-            expired_at=current_time + timedelta(days=7),
-        )
-        response = Response()
-        response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
-        response.data = {
-            "access_token": access_token,
-        }
-        return response
+        if user.tfa_secret:
+            return Response({'id':user.id})
+        secret = pyotp.random_base32()
+        otpauth_url = pyotp.totp.TOTP(secret).provisioning_uri(issuer_name="My App")
+        return Response({
+            "id": user.id,
+            'secret': secret,
+            "otpauth_url": otpauth_url,
+        })
 
 class TwoFactorAPIView(APIView):
     def post(self,request):
         pass
+        #  access_token = create_access_token(user.id)
+        # refresh_token = create_refresh_token(user.id)
+        # UserToken.objects.create(
+        #     user_id=user.id,
+        #     token=refresh_token,
+        #     expired_at=current_time + timedelta(days=7),
+        # )
+        # response = Response()
+        # response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
+        # response.data = {
+        #     "access_token": access_token,
+        # }
+        # return response
 
 class UserAPIView(APIView):
     authentication_classes = [JWTAuthentication]
