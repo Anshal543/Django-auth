@@ -29,7 +29,7 @@ class RegisterAPIView(APIView):
 
 class LoginAPIView(APIView):
     def post(self, request):
-        current_time = datetime.now(timezone.utc)
+
         data = request.data
         email = data.get("email")
         password = data.get("password")
@@ -39,31 +39,47 @@ class LoginAPIView(APIView):
         if not user.check_password(password):
             raise APIException("Incorrect password")
         if user.tfa_secret:
-            return Response({'id':user.id})
+            return Response({"id": user.id})
         secret = pyotp.random_base32()
         otpauth_url = pyotp.totp.TOTP(secret).provisioning_uri(issuer_name="My App")
-        return Response({
-            "id": user.id,
-            'secret': secret,
-            "otpauth_url": otpauth_url,
-        })
+        return Response(
+            {
+                "id": user.id,
+                "secret": secret,
+                "otpauth_url": otpauth_url,
+            }
+        )
+
 
 class TwoFactorAPIView(APIView):
-    def post(self,request):
-        pass
-        #  access_token = create_access_token(user.id)
-        # refresh_token = create_refresh_token(user.id)
-        # UserToken.objects.create(
-        #     user_id=user.id,
-        #     token=refresh_token,
-        #     expired_at=current_time + timedelta(days=7),
-        # )
-        # response = Response()
-        # response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
-        # response.data = {
-        #     "access_token": access_token,
-        # }
-        # return response
+    def post(self, request):
+        id = request.data.get("id")
+        current_time = datetime.now(timezone.utc)
+        user = User.objects.filter(pk=id).first()
+        if not user:
+            raise AuthenticationFailed("Invalid credentials")
+        secret = (
+            user.tfa_secret if user.tfa_secret != "" else request.data.get("secret")
+        )
+        if not pyotp.TOTP(secret).verify(request.data.get("code")):
+            raise AuthenticationFailed("Invalid OTP")
+        if user.tfa_secret == "":
+            user.tfa_secret = secret
+            user.save()
+        access_token = create_access_token(id)
+        refresh_token = create_refresh_token(id)
+        UserToken.objects.create(
+            user_id=id,
+            token=refresh_token,
+            expired_at=current_time + timedelta(days=7),
+        )
+        response = Response()
+        response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
+        response.data = {
+            "access_token": access_token,
+        }
+        return response
+
 
 class UserAPIView(APIView):
     authentication_classes = [JWTAuthentication]
@@ -120,7 +136,7 @@ class ForgotAPIView(APIView):
             from_email="from@example.com",
             to=[email],
         )
-        email.content_subtype = "html" 
+        email.content_subtype = "html"
         email.send()
         return Response({"message": "success"})
 
