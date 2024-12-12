@@ -26,7 +26,7 @@ const Login = () => {
   }
   let form;
   if (loginData?.id == 0) {
-    form = <LoginForm loginData={setLoginData} />;
+    form = <LoginForm loginData={setLoginData} success={success} />;
   } else {
     form = <AuthenticatorForm loginData={loginData} success={success} />;
   }

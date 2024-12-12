@@ -1,5 +1,6 @@
 import axios from "axios";
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, ReactElement, useEffect, useState } from "react";
+import qrcode from "qrcode";
 
 interface AuththenicatorProps {
   loginData: {
@@ -12,13 +13,24 @@ interface AuththenicatorProps {
 
 const AuthenticatorForm = (props: AuththenicatorProps) => {
   const [code, setCode] = useState<string | null>();
+  const [img,setImg] = useState<ReactElement | null>()
+
+  useEffect(()=>{
+    if(props.loginData.otpauth_url){
+
+      qrcode.toDataURL(props.loginData.otpauth_url, (err,url)=>{
+        setImg(<img src={url} style={{width:"100%"}}/>)
+      })
+    }
+  },[props.loginData.otpauth_url])
+
   const formSubmit = async (e: FormEvent) => {
     e.preventDefault();
-     const {status} = await axios.post("two-factor/", {
+     const {data,status} = await axios.post("two-factor/", {
       ...props.loginData,
       code: code,
     }, {withCredentials:true});
-    console.log(props.loginData);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${data.access_token}`;
     if(status==200){
      props.success()
     }
@@ -63,6 +75,7 @@ const AuthenticatorForm = (props: AuththenicatorProps) => {
                 Submit
               </button>
             </form>
+            {img}
           </div>
         </div>
       </div>

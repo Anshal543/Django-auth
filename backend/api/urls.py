@@ -7,13 +7,15 @@ from .views import (
     LogoutAPIView,
     ForgotAPIView,
     ResetAPIView,
-    TwoFactorAPIView
+    TwoFactorAPIView,
+    GoogleAuthAPIView
 )
 
 urlpatterns = [
     path("register/", RegisterAPIView.as_view(), name="register"),
     path("login/", LoginAPIView.as_view(), name="login"),
     path("two-factor/", TwoFactorAPIView.as_view(), name="oauth"),
+    path("google-auth/", GoogleAuthAPIView.as_view(), name="oauth"),
     path("user/", UserAPIView.as_view(), name="login"),
     path("refresh/", RefreshTokenAPIView.as_view(), name="refresh"),
     path("logout/", LogoutAPIView.as_view(), name="logout"),

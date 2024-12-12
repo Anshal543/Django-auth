@@ -1,20 +1,34 @@
+import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 import { FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
-const LoginForm = (props:{loginData:Function}) => {
+const LoginForm = (props: { loginData: Function,success:Function }) => {
   const [email, setEmail] = useState<string | null>();
   const [password, setpassword] = useState<string | null>();
   const formSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      const {data} = await axios.post("login/", {
+      const { data } = await axios.post("login/", {
         email: email,
         password: password,
       });
-      console.log(data);
-      props.loginData(data)
+      props.loginData(data);
     } catch (error) {}
+  };
+
+  const responseMessage = async(response: CredentialResponse) => {
+     const {status,data}= await axios.post('google-auth/',{
+      token:response.credential
+    },{withCredentials:true})
+    axios.defaults.headers.common['Authorization'] = `Bearer ${data.access_token}`;
+    if(status===200){
+      props.success()
+    }
+  };
+  const errorMessage = () => {
+    console.log("An error occurred during Google login.");
   };
   return (
     <section className="bg-gray-50 dark:bg-gray-900">
@@ -73,6 +87,7 @@ const LoginForm = (props:{loginData:Function}) => {
               >
                 Login to account
               </button>
+              <GoogleLogin onSuccess={responseMessage} onError={errorMessage} />
 
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
                 Don't have an account?{" "}

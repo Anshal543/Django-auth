@@ -6,19 +6,19 @@ import { RootState } from "../redux/store";
 
 const Home = () => {
   const [message, setMessage] = useState<string | null>();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
   const auth = useSelector((state: RootState) => state.auth.value);
   useEffect(() => {
     (async () => {
-      setLoading(true);
+      // setLoading(true);
       try {
         const { data } = await axios.get("user/");
         dispatch(setAuth(true));
         setMessage(`Hi ${data.first_name} ${data.last_name}`);
         
       } catch (error) {
-        setMessage("you are not logged in");
+        // setMessage("you are not logged in");
         dispatch(setAuth(false));
       }finally{
         setLoading(false);
